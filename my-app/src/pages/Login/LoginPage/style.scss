@@ -1,0 +1,16 @@
+@import './src/scss/variables.scss';
+
+.login{
+    padding: 10px;
+    &__wrapper{
+        @include centerVertical();
+        min-height: 100vh;
+        gap: 15px;
+        color: $textColor;
+    }
+    &__inputs{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+}

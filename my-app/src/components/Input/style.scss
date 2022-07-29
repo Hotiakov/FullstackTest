@@ -1,0 +1,14 @@
+@import './src/scss/variables.scss';
+
+.input{
+    input{
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid $textColor;
+        border-radius: 15px;
+        transition: all 0.5s;
+        &:focus{
+            border-color: $focusColor;
+        }
+    }
+}

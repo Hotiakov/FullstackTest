@@ -1,0 +1,11 @@
+$bgColor: #ede2ff;
+$textColor: #3a56f8;
+$lightColor: #657bfc;
+$focusColor: rgb(255, 244, 87);
+
+@mixin centerVertical(){
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}

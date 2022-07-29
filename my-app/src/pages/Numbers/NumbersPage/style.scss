@@ -1,0 +1,30 @@
+@import './src/scss/variables.scss';
+
+.numbers{
+    padding: 10px;
+    padding-top: 30px;
+    &__wrapper{
+        text-align: center;
+    }
+    &__title{
+        margin-bottom: 25px;
+        color: $textColor;
+    }
+    &__list{
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 300px;
+        margin: 0 auto;
+        margin-bottom: 30px;
+    }
+    &__item{
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        border-bottom: 1px solid $lightColor;
+    }
+    &__text{
+        color: $textColor;
+    }
+}
