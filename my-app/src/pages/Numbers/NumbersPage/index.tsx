@@ -44,7 +44,7 @@ const NumbersPage = () => {
         <div className='numbers'>
             <div className="numbers__wrapper">
                 <h2 className="numbers__title">
-                    You are on a Numbers page
+                    Numbers page
                 </h2>
                 <div className="numbers__list">
                 {
