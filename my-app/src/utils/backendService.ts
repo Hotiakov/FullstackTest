@@ -5,6 +5,45 @@ interface authorizeProps{
     password: string
 }
 
+interface headers{
+    [key: string]: string;
+}
+
+enum Methods{
+    POST="POST", 
+    GET='GET', 
+    PUT='PUT'
+}
+
+const fetchWrapper = async (url: string, callback: () => Promise<any>, method: Methods, body?: any, additionalHeaders?: headers) => {
+    const authToken = localStorage.getItem('authToken');
+    const params = {
+        method: method,
+        headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-type': 'application/json',
+            ...additionalHeaders
+        },
+    };
+    if(body) params['body'] = body;
+    const res = await fetch(baseUrl + url, params);
+    const result = await res.json();
+
+    if(result.message === 'Unauthorized'){
+        try{
+            await backendService.refreshToken();
+            return callback();
+        }
+        catch(e: any){
+            throw e;
+        }
+    }
+    else if(result.message){
+        throw result.message;
+    } else
+        return result;
+}
+
 const backendService = {
     authorize: async ({login, password}: authorizeProps) => {
         const res = await fetch(baseUrl + 'oauth/token', {
@@ -53,102 +92,39 @@ const backendService = {
     },
 
     getClientId: async () => {
-        const authToken = localStorage.getItem('authToken');
-        const res = await fetch(baseUrl + 'api/ver1.0/user/', {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + authToken,
-            },
-        });
-        const result = await res.json();
-        if(result.message === 'Unauthorized'){
-            try{
-                await backendService.refreshToken();
-                return backendService.getClientId();
-            }
-            catch(e: any){
-                throw e;
-            }
-        } else if(result.message){
-            throw result.message;
-        } else
-            return result.client_id;
+        try{
+            const res = await fetchWrapper('api/ver1.0/user/', backendService.getClientId, Methods.GET);
+            return res.client_id;
+        } catch(e){
+            throw e;
+        }
     },
 
     getExtensions: async (clientId: string, page: number, perPage: number) => {
-        const authToken = localStorage.getItem('authToken');
-        const res = await fetch(baseUrl + `api/ver1.0/client/${clientId}/extension/?` + new URLSearchParams({
-            page: page + '',
-            per_page: perPage + '',
-        }), {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + authToken,
-            },
-        });
-        const result = await res.json();
-        if(result.message === 'Unauthorized'){
-            try{
-                await backendService.refreshToken();
-                return backendService.getExtensions(clientId, page, perPage);
-            }
-            catch(e: any){
-                throw e;
-            }
+        try{
+            return await fetchWrapper(`api/ver1.0/client/${clientId}/extension/?` + new URLSearchParams({
+                page: page + '',
+                per_page: perPage + '',
+            }), () => backendService.getExtensions(clientId, page, perPage), Methods.GET);
+        } catch(e){
+            throw e;
         }
-        else if(result.message){
-            throw result.message;
-        } else
-            return result;
     },
     getExtensionInfo: async (clientId: string, extensionId: string = '') => {
-        const authToken = localStorage.getItem('authToken');
-        const res = await fetch(baseUrl + `api/ver1.0/client/${clientId}/extension/${extensionId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + authToken,
-            },
-        });
-        const result = await res.json();
-        if(result.message === 'Unauthorized'){
-            try{
-                await backendService.refreshToken();
-                return backendService.getExtensionInfo(clientId, extensionId);
-            }
-            catch(e: any){
-                throw e;
-            }
+        try{
+            return await fetchWrapper(`api/ver1.0/client/${clientId}/extension/${extensionId}`, () => backendService.getExtensionInfo(clientId, extensionId), Methods.GET);
+        } catch(e){
+            throw e;
         }
-        else if(result.message){
-            throw result.message;
-        } else
-            return result;
     },
     updateExtension: async (clientId: string, extensionId: string, body: any) => {
-        const authToken = localStorage.getItem('authToken');
-        Object.keys(body).forEach(k => body[k] = body[k] === '' ? null : body[k])
-        const res = await fetch(baseUrl + `api/ver1.0/client/${clientId}/extension/${extensionId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + authToken,
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-        const result = await res.json();
-        if(result.message === 'Unauthorized'){
-            try{
-                await backendService.refreshToken();
-                return backendService.updateExtension(clientId, extensionId, body);
-            }
-            catch(e: any){
-                throw e;
-            }
+        // const authToken = localStorage.getItem('authToken');
+        Object.keys(body).forEach(k => body[k] = body[k] === '' ? null : body[k]);
+        try{
+            return await fetchWrapper(`api/ver1.0/client/${clientId}/extension/${extensionId}`, () => backendService.updateExtension(clientId, extensionId, body), Methods.PUT, JSON.stringify(body));
+        } catch(e){
+            throw e;
         }
-        else if(result.message){
-            throw result.message;
-        } else
-            return result;
     }
 };
 

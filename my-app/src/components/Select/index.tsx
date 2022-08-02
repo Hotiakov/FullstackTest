@@ -10,7 +10,7 @@ interface SelectProps{
 
 const Select = ({list, customClass = '', setValue, value}: SelectProps) => {
     return(
-        <select className={`select input__inner ${customClass}`} onChange={e => setValue(e.target.value)} defaultValue='blocked'>
+        <select className={`select input__inner ${customClass}`} onChange={e => setValue(e.target.value)} value={value}>
             {
                 list.map((item,index) => (
                     <option key={index} value={item}>{item}</option>
