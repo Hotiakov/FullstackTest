@@ -5,8 +5,10 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import backendService from 'utils/backendService';
 import Input from 'components/Input';
 import Button from 'components/Button';
+import Select from 'components/Select';
 import { useSelector, useDispatch } from 'react-redux';
 import {userInfoSlice} from 'store/reducers/userInfoSlice';
+import { alertsSlice } from 'store/reducers/alertsSlice';
 import { RootState } from 'store/store';
 
 const NumbersEditPage = () => {
@@ -14,6 +16,7 @@ const NumbersEditPage = () => {
     const navigate = useNavigate();
     const {clientId} = useSelector((state: RootState) => state.userInfoReducer);
     const {cleanClientId, setClientId} = userInfoSlice.actions;
+    const {openAlert} = alertsSlice.actions;
     const dispatch = useDispatch();
 
     const [editable, setEditable] = React.useState({
@@ -27,11 +30,23 @@ const NumbersEditPage = () => {
         message_did: '',
         status: '',
     });
+    const [errors, setErrors] = React.useState({
+        label: false,
+        dial_rule_id: false,
+        dial_rule_limit: false,
+        extension_group_id: false,
+    });
+    const [isFormValid, setFormValid] = React.useState(true);
 
     const [readonly, setReadOnly] = React.useState({});
 
+
     const handleChange = (value: string, field: string) => {
         setEditable(values => ({...values, [field]: value}))
+    }
+
+    const handleError = (value: boolean, field: string) => {
+        setErrors(values => ({...values, [field]: value}));
     }
 
     const setData = (item: any) => {
@@ -60,7 +75,7 @@ const NumbersEditPage = () => {
 
     React.useEffect(() => {
         if(!clientId) return;
-        backendService.getExtension(clientId, id).then(item => {
+        backendService.getExtensionInfo(clientId, id).then(item => {
             if(item.message === 'Unauthorized')
                 navigate('/');
             else{
@@ -68,6 +83,10 @@ const NumbersEditPage = () => {
             }
         })
     }, [clientId]);
+
+    React.useEffect(() => {
+        setFormValid(!Object.keys(errors).some(e => (errors as any)[e]));
+    }, [errors])
 
     if(!localStorage.getItem('authToken')){
         return <Navigate to="/" replace/>
@@ -93,12 +112,24 @@ const NumbersEditPage = () => {
                             <label className='numbers-edit__label'>
                                 <span>Dial rule id</span>
                                 <Input type='number' placeholder='Dial rule id ' value={editable.dial_rule_id || '' }
-                                    setValue={e => handleChange(e, 'dial_rule_id ')}/>
+                                    setValue={e => handleChange(e, 'dial_rule_id ')}
+                                    validator={{
+                                        errorMessage: 'must be positive number',
+                                        setError: value => handleError(value, 'dial_rule_id'),
+                                        isError: errors['dial_rule_id'],
+                                        function: value => !!value.match(/^\d*$/g)
+                                    }}/>
                             </label>
                             <label className='numbers-edit__label'>
                                 <span>Dial rule limit</span>
                                 <Input type='number' placeholder='Dial rule limit' value={editable.dial_rule_limit || ''}
-                                    setValue={e => handleChange(e, 'dial_rule_limit')}/>
+                                    setValue={e => handleChange(e, 'dial_rule_limit')}
+                                    validator={{
+                                        errorMessage: 'must be positive number',
+                                        setError: value => handleError(value, 'dial_rule_limit'),
+                                        isError: errors['dial_rule_limit'],
+                                        function: value => !!value.match(/^\d*$/g)
+                                    }}/>
                             </label>
                             <label className='numbers-edit__label'>
                                 <span>Did as transfer caller id</span>
@@ -108,7 +139,13 @@ const NumbersEditPage = () => {
                             <label className='numbers-edit__label'>
                                 <span>Extension group id</span>
                                 <Input type="number" placeholder='Extension group id' value={editable.extension_group_id || ''}
-                                    setValue={e => handleChange(e, 'extension_group_id')}/>
+                                    setValue={e => handleChange(e, 'extension_group_id')}
+                                    validator={{
+                                        errorMessage: 'must be positive number',
+                                        setError: value => handleError(value, 'extension_group_id'),
+                                        isError: errors['extension_group_id'],
+                                        function: value => !!value.match(/^\d*$/g)
+                                    }}/>
                             </label>
                             <label className='numbers-edit__label'>
                                 <span>Extra params</span>
@@ -118,7 +155,13 @@ const NumbersEditPage = () => {
                             <label className='numbers-edit__label'>
                                 <span>Label</span>
                                 <Input placeholder='label' value={editable.label || ''}
-                                    setValue={e => handleChange(e, 'label')}/>
+                                    setValue={e => handleChange(e, 'label')}
+                                    validator={{
+                                        errorMessage: 'cannot be empty',
+                                        setError: value => handleError(value, 'label'),
+                                        isError: errors['label'],
+                                        function: value => value !== ''
+                                    }}/>
                             </label>
                             <label className='numbers-edit__label'>
                                 <span>Message did</span>
@@ -127,12 +170,14 @@ const NumbersEditPage = () => {
                             </label>
                             <label className='numbers-edit__label'>
                                 <span>Status</span>
-                                <Input placeholder='Status' value={editable.status || ''}
+                                <Select value={editable.status || 'blocked'} list={['blocked', 'active']}
                                     setValue={e => handleChange(e, 'status')}/>
                             </label>
                         </div>
-                        <Button customClass='numbers-edit__btn' text='Save' onClick={() => {
-                            backendService.updateExtension(clientId, id as string, editable);
+                        <Button disabled={!isFormValid} customClass='numbers-edit__btn' text='Save' onClick={() => {
+                            backendService.updateExtension(clientId, id as string, editable)
+                                .then(() => dispatch(openAlert("Data was successfully saved")))
+                                .catch(e => dispatch(openAlert(e)))
                         }}/>
                     </div>
                     <div className="numbers-edit__readonly numbers-edit__column">
@@ -153,10 +198,10 @@ const NumbersEditPage = () => {
                         </div>
                     </div>
                 </div>
-                
                 <div className="numbers-edit__buttons">
                     <Button text='LogOut' onClick={() => {
                         localStorage.removeItem('authToken');
+                        localStorage.removeItem('refreshToken');
                         dispatch(cleanClientId);
                         navigate('/');
                     }}/>

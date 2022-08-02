@@ -3,7 +3,6 @@ import './scss/style.scss';
 import './scss/variables.scss';
 
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
 } from "react-router-dom";
@@ -30,13 +29,11 @@ function App() {
     }, [])
     return (
         <div className="App">
-            <Router>
-                <Routes>
-                    <Route path="/" element={<LoginPage />} />
-                    <Route path="numbers" element={<NumbersPage />} />
-                    <Route path='numbers/:id' element={<NumbersEditPage/>} />
-                </Routes>
-            </Router>
+            <Routes>
+                <Route path="/" element={<LoginPage />} />
+                <Route path="numbers" element={<NumbersPage />} />
+                <Route path='numbers/:id' element={<NumbersEditPage/>} />
+            </Routes>
             <Alert/>
         </div>
     );

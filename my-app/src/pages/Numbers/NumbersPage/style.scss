@@ -27,4 +27,29 @@
     &__text{
         color: $textColor;
     }
+    &__pagination{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    &__arrow{
+        padding: 5px;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        background-color: $textColor;
+        color: $bgColor;
+        transition: all 0.5s;
+        &:hover{
+            background-color: transparent;
+            border-color: $textColor;
+            color: $textColor;
+        }
+        &:disabled{
+            cursor: default;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+    }
 }

@@ -7,9 +7,13 @@ import Input from 'components/Input';
 import Button from 'components/Button';
 
 import backendService from 'utils/backendService';
+import { useDispatch } from 'react-redux';
+import {alertsSlice} from 'store/reducers/alertsSlice';
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const {openAlert} = alertsSlice.actions;
+    const dispatch = useDispatch();
 
 
     const [inputs, setInputs] = React.useState({
@@ -33,12 +37,12 @@ const LoginPage = () => {
                 </div>
                 <Button text='LogIn' onClick={async () => {
                     let token = await backendService.authorize(inputs);
-                    console.log(token);
                     if(!token.access_token){
-                        alert('incorrect login or password');
+                        dispatch(openAlert('incorrect login or password'));
                         return;    
                     }
                     localStorage.setItem('authToken', token.access_token);
+                    localStorage.setItem('refreshToken', token.refresh_token);
                     navigate('/numbers');
                 }} />
             </div>
